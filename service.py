@@ -19,7 +19,11 @@ async def pull_msg():
                 print(time.time() - start_time, msg)
     except Exception as e:
         log('error', str(e))
-                               
+
+
+async def to_es(msg):
+    pass
+
 if __name__ == "__main__":
     loop.run_until_complete(pull_msg())
     loop.run_forever()
