@@ -2,7 +2,6 @@ import logging
 import time
 import aioredis
 import redis
-import asyncio
 from functools import wraps
 from sanic.response import json
 from config import TOKEN
@@ -77,3 +76,10 @@ def rpush_redis(message):
         r.rpush("log-msg", message)
     except Exception as e:
         log('error', str(e))
+
+
+def lpop_redis(key):
+    pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, max_connections=50)
+    r = redis.Redis(connection_pool=pool)
+    msg = r.lpop(key)
+    return msg
