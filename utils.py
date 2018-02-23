@@ -2,11 +2,14 @@ import logging
 import time
 import aioredis
 import redis
+import json
 from functools import wraps
 from sanic.response import json
+from elasticsearch import Elasticsearch
+from logging.handlers import RotatingFileHandler
 from config import TOKEN
 from config import REDIS_HOST, REDIS_PORT, REDIS_DB
-from logging.handlers import RotatingFileHandler
+from config import ES_HOST, ES_PORT
 
 
 def log(level, message):
@@ -83,3 +86,24 @@ def lpop_redis(key):
     r = redis.Redis(connection_pool=pool)
     msg = r.lpop(key)
     return msg
+
+
+async def conn_to_es():
+    client = Elasticsearch(hosts=["http://{0}:{1}".format(ES_HOST, ES_PORT)])
+    return client
+
+
+async def write_to_es(msg):
+    try:
+        """
+           index 以天为单位
+           body可传入dict或是json格式数据
+
+        """
+        index_timestamp = time.strftime("%Y%m%d")
+        timestamp = time.strftime("%Y%m%d%H%M%S")
+        es = await conn_to_es()
+        body = {"message": msg}
+        es.index(index="test-log-{0}".format(index_timestamp), doc_type="uvloop-log", body=body)
+    except Exception as e:
+        print(e)

@@ -3,12 +3,14 @@ import uvloop
 import time
 from utils import log
 from utils import lpop_redis
+from utils import write_to_es
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 loop = uvloop.new_event_loop()
 asyncio.set_event_loop(loop)
 
 
+# 从队例拉取消息
 async def pull_msg():
 
     try:
@@ -16,6 +18,7 @@ async def pull_msg():
             start_time = time.time()
             msg = lpop_redis("log-msg")
             if msg:
+                await write_to_es(str(msg, encoding="utf-8"))
                 print(time.time() - start_time, msg)
     except Exception as e:
         log('error', str(e))
