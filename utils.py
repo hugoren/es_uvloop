@@ -6,6 +6,7 @@ import json
 from functools import wraps
 from sanic.response import json
 from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
 from logging.handlers import RotatingFileHandler
 from config import TOKEN
 from config import REDIS_HOST, REDIS_PORT, REDIS_DB
@@ -83,10 +84,8 @@ def rpush_redis(message):
 
 def lpop_redis(key):
     try:
-        pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, max_connections=50)
-        r = redis.Redis(connection_pool=pool)
-        msg = r.lpop(key)
-        return msg
+        pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, max_connections=10)
+        return redis.Redis(connection_pool=pool).lpop(key)
     except Exception as e:
         log('error', str(e))
 
@@ -96,7 +95,7 @@ async def conn_to_es():
     return client
 
 
-async def write_to_es(msg):
+async def write_to_es(actions):
     try:
         """
            index 以天为单位
@@ -104,10 +103,12 @@ async def write_to_es(msg):
 
         """
         index_timestamp = time.strftime("%Y%m%d")
-        timestamp = time.strftime("%Y%m%d%H%M%S")
         es = await conn_to_es()
-        body = {"message": msg}
-        es.index(index="test-log-{0}".format(index_timestamp), doc_type="uvloop-log", body=body)
+        start_time = time.time()
+        # body = {"message": msg}
+        # es.index(index="test-log-{0}".format(index_timestamp), doc_type="uvloop-log", body=body)
+        bulk(es, actions, index="test-log-uvloop-{0}".format(index_timestamp), raise_on_error=True)
+        print(time.time() - start_time)
     except Exception as e:
         print(e)
         log("error", str(e))
