@@ -82,10 +82,13 @@ def rpush_redis(message):
 
 
 def lpop_redis(key):
-    pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, max_connections=50)
-    r = redis.Redis(connection_pool=pool)
-    msg = r.lpop(key)
-    return msg
+    try:
+        pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, max_connections=50)
+        r = redis.Redis(connection_pool=pool)
+        msg = r.lpop(key)
+        return msg
+    except Exception as e:
+        log('error', str(e))
 
 
 async def conn_to_es():
@@ -107,3 +110,4 @@ async def write_to_es(msg):
         es.index(index="test-log-{0}".format(index_timestamp), doc_type="uvloop-log", body=body)
     except Exception as e:
         print(e)
+        log("error", str(e))

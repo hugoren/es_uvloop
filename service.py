@@ -1,6 +1,8 @@
 import asyncio
 import uvloop
 import time
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+
 from utils import log
 from utils import lpop_redis
 from utils import write_to_es
@@ -16,6 +18,7 @@ async def pull_msg():
     try:
         while 1:
             start_time = time.time()
+
             msg = lpop_redis("log-msg")
             if msg:
                 await write_to_es(str(msg, encoding="utf-8"))
@@ -28,6 +31,9 @@ async def to_es(msg):
     pass
 
 if __name__ == "__main__":
-    loop.run_until_complete(pull_msg())
-    loop.run_forever()
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        executor.submit(loop.run_until_complete(pull_msg()))
+
+
+    # loop.run_forever()
 
