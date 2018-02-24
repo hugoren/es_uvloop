@@ -95,7 +95,7 @@ async def conn_to_es():
     return client
 
 
-async def write_to_es(actions):
+async def write_to_es(index, actions):
     try:
         """
            index 以天为单位
@@ -107,7 +107,7 @@ async def write_to_es(actions):
         start_time = time.time()
         # body = {"message": msg}
         # es.index(index="test-log-{0}".format(index_timestamp), doc_type="uvloop-log", body=body)
-        bulk(es, actions, index="test-log-uvloop-{0}".format(index_timestamp), raise_on_error=True)
+        bulk(es, actions, index=index, raise_on_error=True)
         print(time.time() - start_time)
     except Exception as e:
         print(e)

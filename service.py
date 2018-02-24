@@ -13,27 +13,28 @@ asyncio.set_event_loop(loop)
 
 
 # 从队例拉取消息
-async def pull_msg(bulk_num=100):
+async def pull_msg(bulk_num=400):
 
     try:
         actions = []
         while 1:
-            start_time = time.time()
             msg = lpop_redis("log-msg")
-
+            _index = "test23-log-{0}".format(time.strftime("%Y%m%d"))
+            _type = "test23-log"
             if msg:
-                actions.append(str(msg, encoding="utf-8"))
+                actions.append({
+                    "_index": _index,
+                    "_type": _type,
+                    "_source": {
+                        "msg": str(msg, encoding="utf-8"),
+                    }
+                })
                 if actions.__len__() >= bulk_num:
-                    print(actions)
-                    # await write_to_es(str(msg, encoding="utf-8"))
-                    # print(time.time() - start_time, msg)
-                    print("full {}".format(bulk_num))
-                    break
+                    await write_to_es(_index, actions)
                     actions.clear()
-                print(actions)
             else:
                 print("not full", actions)
-                actions.clear()
+                break
 
     except Exception as e:
         log('error', str(e))
