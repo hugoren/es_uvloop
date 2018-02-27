@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from blinker import signal
 from utils import log
 from utils import lpop_redis
@@ -55,11 +55,9 @@ async def pull_msg(bulk_num=50):
                     print(time.time() - start_time)
             else:
                 if actions:
-                    start_time = time.time()
                     # await write_to_es(_index, actions)
                     es_signal.send(actions)
                     actions.clear()
-                    # print(time.time() - start_time)
 
     except Exception as e:
         print(e)
