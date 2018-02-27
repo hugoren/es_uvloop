@@ -91,7 +91,7 @@ def lpop_redis(key):
 
 
 async def conn_to_es():
-    client = Elasticsearch(hosts=["http://{0}:{1}".format(ES_HOST, ES_PORT)])
+    client = Elasticsearch(hosts=["{0}:{1}".format(ES_HOST, ES_PORT)], )
     return client
 
 
@@ -102,9 +102,9 @@ async def write_to_es(index, actions):
            body可传入dict或是json格式数据
 
         """
-        index_timestamp = time.strftime("%Y%m%d")
         es = await conn_to_es()
         start_time = time.time()
+        #index_timestamp = time.strftime("%Y%m%d")
         # body = {"message": msg}
         # es.index(index="test-log-{0}".format(index_timestamp), doc_type="uvloop-log", body=body)
         bulk(es, actions, index=index, raise_on_error=True)
