@@ -1,18 +1,35 @@
-import aioredis
-import asyncio
-import time
+import selectors
+import socket
 
-loop = asyncio.get_event_loop()
+selector = selectors.DefaultSelector()
+stopped = False
 
 
-async def producer_redis(message):
-    start_time = time.time()
-    redis = await aioredis.create_redis_pool(
-        'redis://127.0.0.1:6379', db=0, loop=loop)
-    await redis.rpush('log-message', message)
-    redis.close()
-    await redis.wait_closed()
-    print(time.time() - start_time)
+def accept(sock, mask):
+    conn, addr = sock.accept()
+    conn.setblocking(False)
+    selector.register(conn, selectors.EVENT_READ, read)
+    print(1111)
+
+
+def read(conn, mask):
+    data = conn.recv(1000)
+    if data:
+        print(22222)
+        print(data)
+        conn.send(data)
+    else:
+        selector.unregister(conn)
+        conn.close()
+
+
+sock =socket.socket()
+sock.bind(("127.0.0.1", 60001))
+sock.listen(100)
+selector.register(sock, selectors.EVENT_READ, accept)
 
 while 1:
-    loop.run_until_complete(producer_redis())
+    events = selector.select()
+    for key, mask in events:
+       callback = key.data
+       callback(key.fileobj, mask)
