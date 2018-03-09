@@ -100,7 +100,7 @@ async def write_to_es(index, actions):
         """
            index 以天为单位
            body可传入dict或是json格式数据
-
+
         """
         es = await conn_to_es()
         start_time = time.time()
