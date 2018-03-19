@@ -21,7 +21,7 @@ es_signal = signal("es_signal")
 @es_signal.connect
 def write_to_es(actions):
     try:
-        _index = "test23-log-{0}".format(time.strftime("%Y%m%d"))
+        _index = "log-{0}".format(time.strftime("%Y%m%d"))
         es = Elasticsearch(["192.168.6.23:9200"])
         bulk(es, actions, index=_index, raise_on_error=True)
     except Exception as e:
@@ -35,8 +35,8 @@ async def pull_msg(bulk_num=50):
         actions = []
         while 1:
             msg = lpop_redis("log-msg")
-            _index = "test23-log-{0}".format(time.strftime("%Y%m%d"))
-            _type = "test23-log"
+            _index = "log-{0}".format(time.strftime("%Y%m%d"))
+            _type = "log"
             if msg:
                 actions.append({
                     "_index": _index,
